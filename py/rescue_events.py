@@ -5,7 +5,7 @@ from datetime import datetime
 def load(original_path, cache_path):
     try:
         print("Loading Data")
-        events = pd.read_csv(cache_path, index_col=0, parse_dates=["Aeg"])
+        events = pd.read_csv(cache_path, index_col=0, parse_dates=["Aeg "])
     except OSError:
         events = None
     else:
@@ -15,8 +15,8 @@ def load(original_path, cache_path):
         print("No cached data found")
         print("Loading from xlsx - slow...")
         events = load_from_xls(original_path)
-        clean(events)
         events.to_csv(cache_path, encoding='utf-8')
+    clean(events)
     print("Data Loaded!")
     print("{} events loaded".format(len(events.index)))
 
@@ -91,6 +91,16 @@ def load_from_xls(path):
 
 
 def clean(df):
+    #Merge renamed categories:
+    replacements = [
+        ("INFRA-ELEKTRIVÕRKUDE AVARII","INFRA - ELEKTRIVÕRKUDE AVARII"),
+        ("INFRA-GAASIAVARII","INFRA - GAASIAVARII"),
+        ("INFRA-KOMMUNAALAVARII","INFRA - KOMMUNAALAVARII"),
+        ("DEM-LÕHKEKEHA","DEM - LÕHKEKEHA")
+    ]
+    for rep in replacements:
+        df["Väljakutse liik SOS"] = df["Väljakutse liik SOS"].str.replace(rep[0],rep[1])
+    
     # Clean data by removing leading and trailing whitespaces
     df["Linn,vald"] = df["Linn,vald"].str.strip()
     df["Linn,vald"] = df["Linn,vald"].str.replace("Vändra vald \(alev\)", "Vändra vald")
